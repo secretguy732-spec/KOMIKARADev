@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Komikara Dev Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080c10;--bgc:#0d1520;--bgp:#111e2d;--bdr:rgba(56,189,248,.12);--bdrb:rgba(56,189,248,.28);
+  --bl:#38bdf8;--bld:#0ea5e9;--gr:#4ade80;--rd:#f87171;--yl:#fbbf24;--pu:#a78bfa;
+  --tx:#dff0fa;--td:#4a7090;--danger:#ef4444;--ok:#22c55e;--warn:#f59e0b;
+}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bgc)}
+::-webkit-scrollbar-thumb{background:#1e3a55;border-radius:3px}
+
+/* ── SPINNER ── */
+.spin{width:28px;height:28px;border:2px solid rgba(56,189,248,.12);border-top-color:var(--bl);border-radius:50%;animation:rot .7s linear infinite;margin:0 auto}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ══════════ LOGIN ══════════ */
+#devlogin{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:radial-gradient(ellipse at 35% 35%,#0b1e33 0%,#080c10 70%)}
+.lbox{background:var(--bgc);border:1px solid var(--bdrb);border-radius:16px;padding:34px 30px;
+  width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 40px rgba(56,189,248,.04);
+  animation:up .45s ease}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.lhdr{text-align:center;margin-bottom:26px}
+.licon{width:50px;height:50px;background:linear-gradient(135deg,var(--bld),var(--pu));border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 12px}
+.lhdr h1{font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--bl);letter-spacing:1.5px}
+.lhdr p{font-size:.72rem;color:var(--td);margin-top:3px}
+.lfg{margin-bottom:14px}
+.lfg label{display:block;font-size:.7rem;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.lfg input{width:100%;padding:10px 13px;background:rgba(0,0,0,.4);border:1px solid var(--bdr);
+  border-radius:8px;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.87rem;outline:none;transition:border-color .2s}
+.lfg input:focus{border-color:var(--bl)}
+.lbtn{width:100%;padding:11px;background:linear-gradient(135deg,var(--bld),var(--bl));border:none;
+  border-radius:8px;color:#000;font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:700;
+  cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.lbtn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(56,189,248,.35)}
+.lbtn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.lerr{margin-top:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.28);
+  border-radius:6px;padding:7px 11px;font-size:.78rem;color:var(--rd);display:none}
+
+/* ══════════ DASHBOARD ══════════ */
+#dashboard{display:none}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:216px;background:var(--bgc);
+  border-right:1px solid var(--bdr);display:flex;flex-direction:column;z-index:10;overflow-y:auto}
+.slogo{padding:18px 16px 14px;border-bottom:1px solid var(--bdr)}
+.slogo h2{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--bl);letter-spacing:2px;text-transform:uppercase}
+.slogo p{font-size:.65rem;color:var(--td);margin-top:2px}
+.ssec{padding:10px 0;border-bottom:1px solid var(--bdr)}
+.sslbl{padding:3px 16px 7px;font-size:.63rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--td);font-weight:700}
+.si{padding:8px 16px;display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.82rem;
+  color:var(--td);transition:all .2s;border:none;background:none;text-align:left;width:100%;
+  font-family:'Nunito',sans-serif;font-weight:700}
+.si:hover{color:var(--tx);background:rgba(56,189,248,.06)}
+.si.on{color:var(--bl);background:rgba(56,189,248,.1);border-right:2px solid var(--bl)}
+.sbadge{margin-left:auto;background:var(--danger);color:#fff;font-size:.62rem;padding:1px 6px;
+  border-radius:9px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.sfoot{margin-top:auto;padding:14px 16px;border-top:1px solid var(--bdr)}
+.suser{font-size:.72rem;color:var(--td);margin-bottom:8px}
+.suser strong{color:var(--bl)}
+.logoutbtn{width:100%;padding:7px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);
+  border-radius:6px;color:var(--rd);font-family:'JetBrains Mono',monospace;font-size:.73rem;cursor:pointer;transition:all .2s}
+.logoutbtn:hover{background:rgba(239,68,68,.2)}
+
+/* MAIN */
+.main{margin-left:216px;padding:26px;min-height:100vh}
+.phdr{margin-bottom:22px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.phdr h1{font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:var(--bl);letter-spacing:1px}
+.phdr p{font-size:.78rem;color:var(--td);margin-top:3px}
+
+/* STAT CARDS */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.scard{background:var(--bgc);border:1px solid var(--bdr);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ca,var(--bl))}
+.scard .sicon{font-size:1.3rem;margin-bottom:7px}
+.scard .sval{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;line-height:1}
+.scard .slbl{font-size:.72rem;color:var(--td);margin-top:3px}
+
+/* TABLE */
+.twrap{background:var(--bgc);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.thdr{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.thdr h3{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--bl)}
+.tsearch{padding:6px 11px;background:rgba(0,0,0,.35);border:1px solid var(--bdr);border-radius:6px;
+  color:var(--tx);font-family:'Nunito',sans-serif;font-size:.8rem;outline:none;min-width:180px}
+.tsearch:focus{border-color:var(--bl)}
+.refbtn{padding:6px 12px;background:rgba(56,189,248,.08);border:1px solid var(--bdrb);border-radius:6px;
+  color:var(--bl);font-size:.75rem;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.refbtn:hover{background:rgba(56,189,248,.15)}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 14px;font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--td);font-weight:700;
+  text-align:left;background:rgba(0,0,0,.2);border-bottom:1px solid var(--bdr);font-family:'JetBrains Mono',monospace}
+td{padding:11px 14px;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(56,189,248,.03)}
+
+/* STATUS BADGE */
+.sbdg{padding:2px 7px;border-radius:4px;font-size:.68rem;font-weight:800;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.sbdg.active{background:rgba(34,197,94,.13);color:var(--gr);border:1px solid rgba(34,197,94,.2)}
+.sbdg.banned{background:rgba(239,68,68,.13);color:var(--rd);border:1px solid rgba(239,68,68,.2)}
+.sbdg.warned{background:rgba(245,158,11,.13);color:var(--yl);border:1px solid rgba(245,158,11,.2)}
+.sbdg.dev{background:rgba(167,139,250,.13);color:var(--pu);border:1px solid rgba(167,139,250,.2)}
+
+/* ACTION BUTTONS */
+.abts{display:flex;gap:5px;flex-wrap:wrap}
+.ab{padding:4px 9px;border-radius:5px;font-size:.7rem;cursor:pointer;font-family:'JetBrains Mono',monospace;font-weight:600;transition:all .2s;white-space:nowrap}
+.ab-ban{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:var(--rd)}
+.ab-ban:hover{background:rgba(239,68,68,.2)}
+.ab-unban{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);color:var(--gr)}
+.ab-unban:hover{background:rgba(34,197,94,.2)}
+.ab-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);color:var(--yl)}
+.ab-warn:hover{background:rgba(245,158,11,.2)}
+.ab-del{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);color:var(--rd)}
+.ab-del:hover{background:rgba(239,68,68,.18)}
+.ab-view{background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.15);color:var(--bl)}
+.ab-view:hover{background:rgba(56,189,248,.15)}
+.ab-prom{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:var(--pu)}
+.ab-prom:hover{background:rgba(167,139,250,.2)}
+
+/* MODAL */
+.mover{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);
+  z-index:300;display:none;align-items:center;justify-content:center;padding:16px}
+.mover.on{display:flex}
+.mbox{background:var(--bgp);border:1px solid var(--bdrb);border-radius:12px;padding:26px;width:100%;max-width:440px;animation:up .3s ease}
+.mbox h3{font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--bl);margin-bottom:14px}
+.mbox p{font-size:.82rem;color:var(--td);margin-bottom:12px;line-height:1.5}
+.mbox label{display:block;font-size:.7rem;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.mbox textarea,.mbox input[type=text]{width:100%;padding:9px 12px;background:rgba(0,0,0,.4);
+  border:1px solid var(--bdr);border-radius:7px;color:var(--tx);font-family:'JetBrains Mono',monospace;
+  font-size:.83rem;outline:none;resize:vertical;margin-bottom:14px}
+.mbox textarea:focus,.mbox input[type=text]:focus{border-color:var(--bl)}
+.mbts{display:flex;gap:9px;justify-content:flex-end}
+.btn-danger{padding:8px 16px;background:linear-gradient(135deg,#ef4444,#dc2626);border:none;border-radius:6px;
+  color:#fff;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.btn-danger:hover{transform:translateY(-1px)}
+.btn-warn-confirm{padding:8px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:6px;
+  color:#000;font-size:.8rem;font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.btn-warn-confirm:hover{transform:translateY(-1px)}
+.btn-cancel{padding:8px 16px;background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:6px;
+  color:var(--td);font-size:.8rem;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .2s}
+.btn-cancel:hover{background:rgba(255,255,255,.09)}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--bgp);border:1px solid var(--bdrb);
+  border-radius:9px;padding:12px 16px;font-size:.8rem;max-width:280px;z-index:500;display:none;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);font-family:'JetBrains Mono',monospace}
+.toast.show{display:block;animation:up .3s ease}
+.toast.ok{border-color:rgba(34,197,94,.4);color:var(--gr)}
+.toast.er{border-color:rgba(239,68,68,.4);color:var(--rd)}
+.toast.wn{border-color:rgba(245,158,11,.4);color:var(--yl)}
+
+/* LOG ENTRY */
+.loge{background:rgba(0,0,0,.3);border:1px solid var(--bdr);border-radius:6px;padding:9px 13px;
+  margin-bottom:7px;font-family:'JetBrains Mono',monospace;font-size:.76rem;display:flex;gap:9px;align-items:flex-start}
+.ltime{color:var(--td);flex-shrink:0;font-size:.7rem}
+.ltype{flex-shrink:0;font-weight:700}
+.ltype.ban{color:var(--rd)}.ltype.unban{color:var(--gr)}.ltype.warn{color:var(--yl)}
+.ltype.delete{color:var(--pu)}.ltype.promote{color:var(--bl)}.ltype.announce{color:var(--gr)}
+.lmsg{flex:1;color:var(--tx);word-break:break-word}
+
+/* ANNOUNCE */
+.aform{background:var(--bgc);border:1px solid var(--bdr);border-radius:10px;padding:18px;margin-bottom:18px}
+.aform h3{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--bl);margin-bottom:12px}
+.aform textarea{width:100%;padding:9px 12px;background:rgba(0,0,0,.4);border:1px solid var(--bdr);
+  border-radius:7px;color:var(--tx);font-family:'Nunito',sans-serif;font-size:.86rem;outline:none;resize:vertical;min-height:72px}
+.aform textarea:focus{border-color:var(--bl)}
+
+/* EMPTY ROW */
+.emrow td{text-align:center;padding:32px;color:var(--td);font-size:.82rem}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-216px);transition:transform .3s}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hambtn{display:block!important}
+  .sgrid{grid-template-columns:repeat(2,1fr)}
+}
+.hambtn{display:none;position:fixed;top:12px;left:12px;background:var(--bgc);
+  border:1px solid var(--bdrb);border-radius:6px;padding:7px 10px;color:var(--bl);cursor:pointer;z-index:50;font-size:.95rem}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="devlogin">
+  <div class="lbox">
+    <div class="lhdr">
+      <div class="licon">⚙️</div>
+      <h1>KOMIKARA DEV</h1>
+      <p>Panel Pengembang — Akses Terbatas</p>
+    </div>
+    <div class="lfg">
+      <label>Username Dev</label>
+      <input type="text" id="duser" placeholder="KomikaraDev" autocomplete="off">
+    </div>
+    <div class="lfg">
+      <label>Password</label>
+      <input type="password" id="dpass" placeholder="••••••••" onkeydown="if(event.key==='Enter')devLogin()">
+    </div>
+    <button class="lbtn" id="lbtn" onclick="devLogin()">🔑 Masuk ke Panel</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard">
+  <button class="hambtn" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+  <div class="sidebar">
+    <div class="slogo">
+      <h2>⚙ KOMIKARA DEV</h2>
+      <p>Admin Panel v1.0</p>
+    </div>
+    <div class="ssec">
+      <div class="sslbl">Overview</div>
+      <button class="si on" onclick="goP('overview',this)">📊 Overview</button>
+    </div>
+    <div class="ssec">
+      <div class="sslbl">Manajemen User</div>
+      <button class="si" onclick="goP('users',this)">👥 Semua User <span class="sbadge" id="bgu">0</span></button>
+      <button class="si" onclick="goP('banned',this)">🚫 Dibanned <span class="sbadge" id="bgb">0</span></button>
+      <button class="si" onclick="goP('warned',this)">⚠️ Diperingatkan <span class="sbadge" id="bgw">0</span></button>
+    </div>
+    <div class="ssec">
+      <div class="sslbl">Konten</div>
+      <button class="si" onclick="goP('comics',this)">📚 Kelola Komik <span class="sbadge" id="bgc">0</span></button>
+    </div>
+    <div class="ssec">
+      <div class="sslbl">System</div>
+      <button class="si" onclick="goP('logs',this)">📋 Audit Log</button>
+      <button class="si" onclick="goP('announce',this)">📢 Pengumuman</button>
+    </div>
+    <div class="sfoot">
+      <div class="suser">Login sebagai:<br><strong>KomikaraDev</strong></div>
+      <button class="logoutbtn" onclick="devLogout()">⬛ Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- OVERVIEW -->
+    <div id="pg-overview">
+      <div class="phdr">
+        <div><h1>📊 OVERVIEW</h1><p>Ringkasan platform Komikara</p></div>
+        <button class="refbtn" onclick="loadOverview()">↻ Refresh</button>
+      </div>
+      <div class="sgrid">
+        <div class="scard" style="--ca:var(--bl)"><div class="sicon">👥</div><div class="sval" id="ov-users">0</div><div class="slbl">Total User</div></div>
+        <div class="scard" style="--ca:var(--gr)"><div class="sicon">📚</div><div class="sval" id="ov-comics">0</div><div class="slbl">Total Komik</div></div>
+        <div class="scard" style="--ca:var(--rd)"><div class="sicon">🚫</div><div class="sval" id="ov-banned">0</div><div class="slbl">Dibanned</div></div>
+        <div class="scard" style="--ca:var(--yl)"><div class="sicon">⚠️</div><div class="sval" id="ov-warned">0</div><div class="slbl">Diperingatkan</div></div>
+        <div class="scard" style="--ca:var(--pu)"><div class="sicon">👁️</div><div class="sval" id="ov-views">0</div><div class="slbl">Total Views</div></div>
+      </div>
+      <div class="twrap">
+        <div class="thdr"><h3>📋 Aktivitas Terbaru</h3></div>
+        <div style="padding:14px;max-height:360px;overflow-y:auto" id="ov-logs">
+          <div style="text-align:center;padding:24px;color:var(--td);font-size:.8rem">Memuat...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="pg-users" style="display:none">
+      <div class="phdr">
+        <div><h1>👥 SEMUA USER</h1><p>Kelola semua akun pengguna</p></div>
+        <button class="refbtn" onclick="loadUsers()">↻ Refresh</button>
+      </div>
+      <div class="twrap">
+        <div class="thdr">
+          <h3>Daftar User</h3>
+          <input class="tsearch" type="text" placeholder="Cari nama / email..." oninput="filterUsers(this.value)">
+        </div>
+        <div class="tscroll">
+          <table><thead><tr>
+            <th>User</th><th>Email</th><th>Status</th><th>Peringatan</th><th>Komik</th><th>Bergabung</th><th>Aksi</th>
+          </tr></thead>
+          <tbody id="tb-users"><tr><td colspan="7" style="text-align:center;padding:30px"><div class="spin"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BANNED -->
+    <div id="pg-banned" style="display:none">
+      <div class="phdr">
+        <div><h1>🚫 USER DIBANNED</h1><p>Akun yang telah dibanned</p></div>
+        <button class="refbtn" onclick="loadBanned()">↻ Refresh</button>
+      </div>
+      <div class="twrap">
+        <div class="thdr"><h3>Banned Users</h3></div>
+        <div class="tscroll">
+          <table><thead><tr><th>User</th><th>Email</th><th>Alasan</th><th>Dibanned Oleh</th><th>Aksi</th></tr></thead>
+          <tbody id="tb-banned"><tr><td colspan="5" style="text-align:center;padding:30px"><div class="spin"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- WARNED -->
+    <div id="pg-warned" style="display:none">
+      <div class="phdr">
+        <div><h1>⚠️ DIPERINGATKAN</h1><p>User yang mendapat peringatan</p></div>
+        <button class="refbtn" onclick="loadWarned()">↻ Refresh</button>
+      </div>
+      <div class="twrap">
+        <div class="thdr"><h3>Warned Users</h3></div>
+        <div class="tscroll">
+          <table><thead><tr><th>User</th><th>Email</th><th>Jumlah</th><th>Peringatan Terakhir</th><th>Aksi</th></tr></thead>
+          <tbody id="tb-warned"><tr><td colspan="5" style="text-align:center;padding:30px"><div class="spin"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMICS -->
+    <div id="pg-comics" style="display:none">
+      <div class="phdr">
+        <div><h1>📚 KELOLA KOMIK</h1><p>Review & moderasi konten</p></div>
+        <button class="refbtn" onclick="loadComics()">↻ Refresh</button>
+      </div>
+      <div class="twrap">
+        <div class="thdr">
+          <h3>Semua Komik</h3>
+          <input class="tsearch" type="text" placeholder="Cari judul / author..." oninput="filterComics(this.value)">
+        </div>
+        <div class="tscroll">
+          <table><thead><tr><th>Cover</th><th>Judul</th><th>Author</th><th>Tipe</th><th>Views</th><th>Diupload</th><th>Aksi</th></tr></thead>
+          <tbody id="tb-comics"><tr><td colspan="7" style="text-align:center;padding:30px"><div class="spin"></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="pg-logs" style="display:none">
+      <div class="phdr">
+        <div><h1>📋 AUDIT LOG</h1><p>Semua tindakan admin</p></div>
+        <button class="refbtn" onclick="loadLogs()">↻ Refresh</button>
+      </div>
+      <div id="logs-cont" style="max-height:620px;overflow-y:auto">
+        <div style="text-align:center;padding:36px;color:var(--td)">Memuat...</div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCE -->
+    <div id="pg-announce" style="display:none">
+      <div class="phdr"><div><h1>📢 PENGUMUMAN</h1><p>Kirim notifikasi ke semua user</p></div></div>
+      <div class="aform">
+        <h3>Buat Pengumuman</h3>
+        <label style="display:block;font-size:.7rem;font-weight:700;color:var(--bl);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Pesan</label>
+        <textarea id="ann-text" placeholder="Tulis pengumuman untuk semua user..."></textarea>
+        <div style="margin-top:10px">
+          <button class="ab ab-view" style="padding:8px 16px;font-size:.8rem" onclick="sendAnn()">📢 Kirim ke Semua User</button>
+        </div>
+      </div>
+      <div class="twrap">
+        <div class="thdr"><h3>Riwayat Pengumuman</h3></div>
+        <div style="padding:14px;max-height:400px;overflow-y:auto" id="ann-hist">
+          <div style="text-align:center;padding:20px;color:var(--td);font-size:.8rem">Memuat...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /dashboard -->
+
+<!-- ═══ BAN MODAL ═══ -->
+<div class="mover" id="ban-modal">
+  <div class="mbox">
+    <h3>🚫 Ban User</h3>
+    <p>User: <strong id="ban-name" style="color:var(--tx)">-</strong></p>
+    <label>Alasan Ban *</label>
+    <textarea id="ban-reason" rows="3" placeholder="Tulis alasan ban..."></textarea>
+    <div class="mbts">
+      <button class="btn-cancel" onclick="closeM('ban-modal')">Batal</button>
+      <button class="btn-danger" onclick="confirmBan()">🚫 Ban User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ WARN MODAL ═══ -->
+<div class="mover" id="warn-modal">
+  <div class="mbox">
+    <h3>⚠️ Beri Peringatan</h3>
+    <p>User: <strong id="warn-name" style="color:var(--tx)">-</strong></p>
+    <label>Isi Peringatan *</label>
+    <textarea id="warn-text" rows="3" placeholder="Tulis pesan peringatan..."></textarea>
+    <div class="mbts">
+      <button class="btn-cancel" onclick="closeM('warn-modal')">Batal</button>
+      <button class="btn-warn-confirm" onclick="confirmWarn()">⚠️ Kirim Peringatan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DELETE COMIC MODAL ═══ -->
+<div class="mover" id="delcomic-modal">
+  <div class="mbox">
+    <h3>🗑️ Hapus Komik</h3>
+    <p>Yakin hapus <strong id="del-comic-title" style="color:var(--rd)">-</strong>? Tidak bisa dibatalkan.</p>
+    <div class="mbts">
+      <button class="btn-cancel" onclick="closeM('delcomic-modal')">Batal</button>
+      <button class="btn-danger" onclick="confirmDelComic()">🗑️ Hapus</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+//  STORAGE (same keys as komikara.html)
+// ══════════════════════════════════════
+const DB = {
+  get:(k)=>{ try{ return JSON.parse(localStorage.getItem(k)) }catch{return null} },
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+  users:()=>DB.get('kmkr_users')||[],
+  comics:()=>DB.get('kmkr_comics')||[],
+  saveUsers:(u)=>DB.set('kmkr_users',u),
+  saveComics:(c)=>DB.set('kmkr_comics',c),
+  logs:()=>DB.get('kmkr_logs')||[],
+  saveLogs:(l)=>DB.set('kmkr_logs',l),
+  anns:()=>DB.get('kmkr_anns')||[],
+  saveAnns:(a)=>DB.set('kmkr_anns',a),
+};
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+const DEV_USER = 'KomikaraDev';
+const DEV_PASS = 'KomikaraDev1';
+let devLoggedIn = false;
+let allUsersCache = [];
+let allComicsCache = [];
+let banTargetId = null;
+let warnTargetId = null;
+let delComicId = null;
+
+// ══════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════
+function devLogin(){
+  const u = document.getElementById('duser').value.trim();
+  const p = document.getElementById('dpass').value;
+  const err = document.getElementById('lerr');
+  err.style.display = 'none';
+  if(!u || !p){ err.textContent='Username & password wajib diisi!'; err.style.display='block'; return; }
+  if(u !== DEV_USER || p !== DEV_PASS){
+    err.textContent='Username atau password salah!'; err.style.display='block'; return;
+  }
+  devLoggedIn = true;
+  document.getElementById('devlogin').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadOverview();
+  loadUsers();
+  loadComics();
+  updateBadges();
+}
+
+function devLogout(){
+  devLoggedIn = false;
+  document.getElementById('devlogin').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('duser').value = '';
+  document.getElementById('dpass').value = '';
+  document.getElementById('lerr').style.display = 'none';
+}
+
+// ══════════════════════════════════════
+//  PAGE NAVIGATION
+// ══════════════════════════════════════
+function goP(page, btn){
+  document.querySelectorAll('[id^="pg-"]').forEach(p=>p.style.display='none');
+  document.getElementById('pg-'+page).style.display = 'block';
+  document.querySelectorAll('.si').forEach(s=>s.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  if(page==='logs') loadLogs();
+  if(page==='announce') loadAnnHist();
+  if(page==='banned') loadBanned();
+  if(page==='warned') loadWarned();
+  updateBadges();
+}
+
+function updateBadges(){
+  const users = DB.users();
+  const comics = DB.comics();
+  const banned = users.filter(u=>u.banned).length;
+  const warned = users.filter(u=>u.warnings&&u.warnings.length>0).length;
+  document.getElementById('bgu').textContent = users.length;
+  document.getElementById('bgb').textContent = banned;
+  document.getElementById('bgw').textContent = warned;
+  document.getElementById('bgc').textContent = comics.length;
+}
+
+// ══════════════════════════════════════
+//  OVERVIEW
+// ══════════════════════════════════════
+function loadOverview(){
+  const users = DB.users();
+  const comics = DB.comics();
+  const banned = users.filter(u=>u.banned).length;
+  const warned = users.filter(u=>u.warnings&&u.warnings.length>0).length;
+  const views = comics.reduce((s,c)=>s+(c.views||0),0);
+  document.getElementById('ov-users').textContent = users.length;
+  document.getElementById('ov-comics').textContent = comics.length;
+  document.getElementById('ov-banned').textContent = banned;
+  document.getElementById('ov-warned').textContent = warned;
+  document.getElementById('ov-views').textContent = views.toLocaleString();
+  // Recent logs
+  const logs = DB.logs();
+  const cont = document.getElementById('ov-logs');
+  if(logs.length===0){
+    cont.innerHTML='<div style="text-align:center;padding:24px;color:var(--td);font-size:.8rem">Belum ada aktivitas</div>';
+    return;
+  }
+  cont.innerHTML = [...logs].reverse().slice(0,8).map(l=>logHTML(l)).join('');
+}
+
+// ══════════════════════════════════════
+//  USERS
+// ══════════════════════════════════════
+function loadUsers(){
+  allUsersCache = DB.users();
+  renderUsers(allUsersCache);
+}
+
+function filterUsers(val){
+  const f = allUsersCache.filter(u=>
+    (u.name||'').toLowerCase().includes(val.toLowerCase())||
+    (u.email||'').toLowerCase().includes(val.toLowerCase())
+  );
+  renderUsers(f);
+}
+
+function renderUsers(users){
+  const tb = document.getElementById('tb-users');
+  if(users.length===0){
+    tb.innerHTML='<tr class="emrow"><td colspan="7">Tidak ada user terdaftar</td></tr>'; return;
+  }
+  tb.innerHTML = users.map(u=>{
+    const status = u.banned?'banned':(u.role==='developer'?'dev':(u.warnings&&u.warnings.length>0?'warned':'active'));
+    const slabel = u.banned?'🚫 Banned':(u.role==='developer'?'⚙ Dev':(u.warnings&&u.warnings.length>0?'⚠️ Warned':'✅ Aktif'));
+    const joined = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString('id-ID') : '-';
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:900;flex-shrink:0">${(u.name||'?')[0].toUpperCase()}</div>
+          <span style="font-weight:700">${esc(u.name||'-')}</span>
+        </div>
+      </td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--td)">${esc(u.email||'-')}</td>
+      <td><span class="sbdg ${status}">${slabel}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;text-align:center">${(u.warnings||[]).length}</td>
+      <td style="font-family:'JetBrains Mono',monospace;text-align:center">${u.comicsCount||0}</td>
+      <td style="font-size:.73rem;color:var(--td)">${joined}</td>
+      <td>
+        <div class="abts">
+          ${u.banned
+            ?`<button class="ab ab-unban" onclick="doUnban('${u.id}','${esc(u.name)}')">✅ Unban</button>`
+            :`<button class="ab ab-ban" onclick="openBan('${u.id}','${esc(u.name)}')">🚫 Ban</button>`
+          }
+          <button class="ab ab-warn" onclick="openWarn('${u.id}','${esc(u.name)}')">⚠️ Warn</button>
+          ${u.role!=='developer'?`<button class="ab ab-prom" onclick="doPromote('${u.id}','${esc(u.name)}')">⚙ Dev</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+//  BANNED
+// ══════════════════════════════════════
+function loadBanned(){
+  const users = DB.users().filter(u=>u.banned);
+  const tb = document.getElementById('tb-banned');
+  if(users.length===0){
+    tb.innerHTML='<tr class="emrow"><td colspan="5">Tidak ada user yang dibanned</td></tr>'; return;
+  }
+  tb.innerHTML = users.map(u=>`<tr>
+    <td style="font-weight:700">${esc(u.name||'-')}</td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--td)">${esc(u.email||'-')}</td>
+    <td style="font-size:.78rem;color:var(--rd)">${esc(u.banReason||'Tidak ada alasan')}</td>
+    <td style="font-size:.75rem;color:var(--td)">${esc(u.bannedBy||'-')}</td>
+    <td><button class="ab ab-unban" onclick="doUnban('${u.id}','${esc(u.name)}')">✅ Unban</button></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════
+//  WARNED
+// ══════════════════════════════════════
+function loadWarned(){
+  const users = DB.users().filter(u=>u.warnings&&u.warnings.length>0);
+  const tb = document.getElementById('tb-warned');
+  if(users.length===0){
+    tb.innerHTML='<tr class="emrow"><td colspan="5">Tidak ada user yang diperingatkan</td></tr>'; return;
+  }
+  tb.innerHTML = users.map(u=>{
+    const last = u.warnings[u.warnings.length-1];
+    const lastTxt = typeof last==='string'?last:(last.text||'-');
+    return `<tr>
+      <td style="font-weight:700">${esc(u.name||'-')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--td)">${esc(u.email||'-')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;color:var(--yl);text-align:center">${u.warnings.length}x</td>
+      <td style="font-size:.78rem">${esc(lastTxt)}</td>
+      <td><button class="ab ab-warn" onclick="openWarn('${u.id}','${esc(u.name)}')">⚠️ Warn Lagi</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+//  COMICS
+// ══════════════════════════════════════
+function loadComics(){
+  allComicsCache = DB.comics();
+  renderComics(allComicsCache);
+}
+
+function filterComics(val){
+  const f = allComicsCache.filter(c=>
+    (c.title||'').toLowerCase().includes(val.toLowerCase())||
+    (c.author||'').toLowerCase().includes(val.toLowerCase())
+  );
+  renderComics(f);
+}
+
+function renderComics(comics){
+  const tb = document.getElementById('tb-comics');
+  if(comics.length===0){
+    tb.innerHTML='<tr class="emrow"><td colspan="7">Tidak ada komik</td></tr>'; return;
+  }
+  tb.innerHTML = comics.map(c=>{
+    const d = c.createdAt ? new Date(c.createdAt).toLocaleDateString('id-ID') : '-';
+    return `<tr>
+      <td>${c.coverUrl
+        ?`<img src="${esc(c.coverUrl)}" style="width:34px;height:46px;border-radius:4px;object-fit:cover" onerror="this.style.display='none'">`
+        :`<div style="width:34px;height:46px;background:rgba(255,255,255,.05);border-radius:4px"></div>`
+      }</td>
+      <td style="font-weight:700;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.title)}">${esc(c.title||'-')}</td>
+      <td style="font-size:.78rem">${esc(c.author||'-')}</td>
+      <td><span class="sbdg active" style="text-transform:none">${esc(c.type||'-')}</span></td>
+      <td style="font-family:'JetBrains Mono',monospace">${(c.views||0).toLocaleString()}</td>
+      <td style="font-size:.73rem;color:var(--td)">${d}</td>
+      <td><button class="ab ab-del" onclick="openDelComic('${c.id}','${esc(c.title)}')">🗑 Hapus</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+//  BAN / UNBAN / WARN / PROMOTE ACTIONS
+// ══════════════════════════════════════
+function openBan(uid, name){
+  banTargetId = uid;
+  document.getElementById('ban-name').textContent = name;
+  document.getElementById('ban-reason').value = '';
+  openM('ban-modal');
+}
+
+function confirmBan(){
+  const reason = document.getElementById('ban-reason').value.trim();
+  if(!reason){ showToast('Tulis alasan ban!','wn'); return; }
+  const users = DB.users();
+  const idx = users.findIndex(u=>u.id===banTargetId);
+  if(idx<0){ showToast('User tidak ditemukan','er'); return; }
+  users[idx].banned = true;
+  users[idx].banReason = reason;
+  users[idx].bannedBy = 'KomikaraDev';
+  DB.saveUsers(users);
+  addLog('ban', `Ban user "${users[idx].name}" (${users[idx].email}): ${reason}`);
+  closeM('ban-modal');
+  showToast('✅ User berhasil dibanned','ok');
+  loadUsers(); loadBanned(); updateBadges();
+}
+
+function doUnban(uid, name){
+  if(!confirm(`Yakin unban "${name}"?`)) return;
+  const users = DB.users();
+  const idx = users.findIndex(u=>u.id===uid);
+  if(idx<0) return;
+  users[idx].banned = false;
+  users[idx].banReason = '';
+  users[idx].bannedBy = '';
+  DB.saveUsers(users);
+  addLog('unban', `Unban user "${name}"`);
+  showToast('✅ User berhasil di-unban','ok');
+  loadUsers(); loadBanned(); updateBadges();
+}
+
+function openWarn(uid, name){
+  warnTargetId = uid;
+  document.getElementById('warn-name').textContent = name;
+  document.getElementById('warn-text').value = '';
+  openM('warn-modal');
+}
+
+function confirmWarn(){
+  const text = document.getElementById('warn-text').value.trim();
+  if(!text){ showToast('Tulis isi peringatan!','wn'); return; }
+  const users = DB.users();
+  const idx = users.findIndex(u=>u.id===warnTargetId);
+  if(idx<0){ showToast('User tidak ditemukan','er'); return; }
+  const warn = {
+    id: 'w_'+Date.now(),
+    text,
+    date: new Date().toLocaleDateString('id-ID'),
+    by: 'KomikaraDev'
+  };
+  if(!users[idx].warnings) users[idx].warnings = [];
+  users[idx].warnings.push(warn);
+  DB.saveUsers(users);
+  addLog('warn', `Peringatan ke "${users[idx].name}": ${text}`);
+  closeM('warn-modal');
+  showToast('⚠️ Peringatan berhasil dikirim','wn');
+  loadUsers(); loadWarned(); updateBadges();
+}
+
+function doPromote(uid, name){
+  if(!confirm(`Jadikan "${name}" sebagai Developer?`)) return;
+  const users = DB.users();
+  const idx = users.findIndex(u=>u.id===uid);
+  if(idx<0) return;
+  users[idx].role = 'developer';
+  DB.saveUsers(users);
+  addLog('promote', `Promosi "${name}" menjadi Developer`);
+  showToast('✅ User dipromosikan jadi Developer','ok');
+  loadUsers(); updateBadges();
+}
+
+// ══════════════════════════════════════
+//  DELETE COMIC
+// ══════════════════════════════════════
+function openDelComic(id, title){
+  delComicId = id;
+  document.getElementById('del-comic-title').textContent = title;
+  openM('delcomic-modal');
+}
+
+function confirmDelComic(){
+  const comics = DB.comics();
+  const comic = comics.find(c=>c.id===delComicId);
+  const newComics = comics.filter(c=>c.id!==delComicId);
+  DB.saveComics(newComics);
+  if(comic){
+    // Decrease author's comic count
+    const users = DB.users();
+    const ui = users.findIndex(u=>u.id===comic.authorId);
+    if(ui>=0){ users[ui].comicsCount=Math.max(0,(users[ui].comicsCount||1)-1); DB.saveUsers(users); }
+    addLog('delete', `Hapus komik "${comic.title}" oleh ${comic.author||'-'}`);
+  }
+  closeM('delcomic-modal');
+  showToast('🗑️ Komik berhasil dihapus','ok');
+  loadComics(); updateBadges();
+}
+
+// ══════════════════════════════════════
+//  LOGS
+// ══════════════════════════════════════
+function addLog(type, msg){
+  const logs = DB.logs();
+  logs.push({ type, message:msg, time: new Date().toLocaleString('id-ID'), ts: Date.now() });
+  // keep last 200
+  if(logs.length>200) logs.splice(0, logs.length-200);
+  DB.saveLogs(logs);
+}
+
+function loadLogs(){
+  const logs = DB.logs();
+  const cont = document.getElementById('logs-cont');
+  if(logs.length===0){
+    cont.innerHTML='<div style="text-align:center;padding:40px;color:var(--td)">Belum ada log</div>'; return;
+  }
+  cont.innerHTML = [...logs].reverse().map(l=>logHTML(l)).join('');
+}
+
+function logHTML(l){
+  return `<div class="loge">
+    <span class="ltime">${esc(l.time||'-')}</span>
+    <span class="ltype ${l.type}">[${(l.type||'').toUpperCase()}]</span>
+    <span class="lmsg">${esc(l.message||'')}</span>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+//  ANNOUNCEMENTS
+// ══════════════════════════════════════
+function sendAnn(){
+  const text = document.getElementById('ann-text').value.trim();
+  if(!text){ showToast('Tulis isi pengumuman!','wn'); return; }
+  // Push warning to all users
+  const users = DB.users();
+  const warn = {
+    id: 'ann_'+Date.now(),
+    text: '📢 Pengumuman: '+text,
+    date: new Date().toLocaleDateString('id-ID'),
+    by: 'KomikaraDev'
+  };
+  users.forEach(u=>{ if(!u.warnings) u.warnings=[]; u.warnings.push(warn); });
+  DB.saveUsers(users);
+  // Save ann record
+  const anns = DB.anns();
+  anns.unshift({ text, time: new Date().toLocaleString('id-ID'), to: users.length });
+  DB.saveAnns(anns);
+  addLog('announce', `Pengumuman ke ${users.length} user: ${text.substring(0,60)}`);
+  document.getElementById('ann-text').value = '';
+  showToast(`📢 Dikirim ke ${users.length} user!`,'ok');
+  loadAnnHist(); updateBadges();
+}
+
+function loadAnnHist(){
+  const anns = DB.anns();
+  const cont = document.getElementById('ann-hist');
+  if(anns.length===0){
+    cont.innerHTML='<div style="text-align:center;padding:20px;color:var(--td);font-size:.8rem">Belum ada pengumuman</div>'; return;
+  }
+  cont.innerHTML = anns.map(a=>`
+    <div class="loge">
+      <span class="ltime">${esc(a.time||'-')}</span>
+      <span class="ltype announce">[ANNOUNCE → ${a.to||0} user]</span>
+      <span class="lmsg">${esc(a.text||'')}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════
+function openM(id){ document.getElementById(id).classList.add('on'); }
+function closeM(id){ document.getElementById(id).classList.remove('on'); }
+
+document.querySelectorAll('.mover').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('on'); });
+});
+
+// ══════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════
+let toastTimer;
+function showToast(msg, type='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show '+type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+// ══════════════════════════════════════
+//  ESCAPE
+// ══════════════════════════════════════
+function esc(s){
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.mover.on').forEach(m=>m.classList.remove('on'));
+});
+
+// Auto-refresh sidebar badges every 5 seconds when logged in
+setInterval(()=>{ if(devLoggedIn) updateBadges(); }, 5000);
+</script>
+</body>
+</html>
